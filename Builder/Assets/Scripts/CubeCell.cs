@@ -133,16 +133,29 @@ public struct CubeData
         return data;
     }
 
-    public bool HasCube
+
+    public bool HasCube(bool currentIsTransparent)
     {
-        get
+        if(currentIsTransparent)
+        {
+            return active && isTransparent;
+        }
+        else
         {
             return active && !isTransparent;
         }
+
+  
     }
 
-   
 
+    //public bool HasCube
+    //{
+    //    get
+    //    {
+    //        return active && !isTransparent;
+    //    }
+    //}
     public override string ToString()
     {
         return active.ToString() + "," + isTransparent.ToString() + "," + orientate.ToString() + "," + type.ToString();

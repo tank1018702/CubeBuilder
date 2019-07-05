@@ -147,7 +147,8 @@ public class ChunkManager : MonoBehaviour
                 if (chunk.NeedRefresh)
                 {
                     chunk.RefreshSelf();
-                    chunk.GetComponent<Renderer>().enabled = true;
+                    chunk.SetVisible(true);
+                    //chunk.GetComponent<Renderer>().enabled = true;
                 }
                 else
                 {

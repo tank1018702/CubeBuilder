@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\BuilderAI.cs" />
     <Compile Include="Assets\Scripts\Characher.cs" />
     <Compile Include="Assets\Scripts\ChunkManager.cs" />
     <Compile Include="Assets\Scripts\ChunkPool.cs" />
@@ -71,9 +72,14 @@
     <Compile Include="Assets\Scripts\CubeMetrics.cs" />
     <Compile Include="Assets\Scripts\ListPool.cs" />
     <Compile Include="Assets\Scripts\LocalChunkBuilder.cs" />
+    <Compile Include="Assets\Scripts\PreviewBox.cs" />
     <Compile Include="Assets\Scripts\Test.cs" />
     <Compile Include="Assets\Scripts\ThirdPesonCamera.cs" />
     <None Include="Assets\FreeVoxelGirl\ReadMe.txt" />
+    <None Include="Assets\OutlineEffect\VerticesOutline_Normal.shader" />
+    <None Include="Assets\OutlineEffect\VerticesOutline_Always.shader" />
+    <None Include="Assets\OutlineEffect\Readme.txt" />
+    <None Include="Assets\Shader\transparency.shader" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>E:/Unity_Git/7/Builder/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

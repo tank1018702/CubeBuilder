@@ -9515,8 +9515,7 @@ GameObject:
   - component: {fileID: 4423959991179382575}
   - component: {fileID: 4338253068414833744}
   - component: {fileID: 1112901002}
-  - component: {fileID: 3328719915308564665}
-  - component: {fileID: 1112901004}
+  - component: {fileID: 183495594}
   m_Layer: 9
   m_Name: KadukiSailorSuitBlackHairPrefab
   m_TagString: Untagged
@@ -9572,13 +9571,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fc1059baa5ebcb4fbfb06d6068c3f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  moveSpeed: 200
   gravity: 9.8
   jumpSpeed: 7.09
   rotateSpeed: 180
   previewCube: {fileID: 0}
+  previewCube2: {fileID: 0}
   camTransform: {fileID: 0}
   grid: {fileID: 0}
+  destroy: {fileID: 4305481777153782422, guid: 073fc8d2d2cb7e4409b0b62cb58114a3, type: 3}
+  build: {fileID: 0}
 --- !u!114 &1112901002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9597,24 +9599,8 @@ MonoBehaviour:
   sizeY: 3
   sizeZ: 3
   updateAmount: 0
---- !u!54 &3328719915308564665
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4338971602600509113}
-  serializedVersion: 2
-  m_Mass: 5
-  m_Drag: 0
-  m_AngularDrag: 0
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 80
-  m_CollisionDetection: 1
---- !u!136 &1112901004
-CapsuleCollider:
+--- !u!143 &183495594
+CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -9623,10 +9609,14 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.35
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0.5, z: 0}
+  serializedVersion: 2
+  m_Height: 1.2
+  m_Radius: 0.3
+  m_SlopeLimit: 45
+  m_StepOffset: 0.1
+  m_SkinWidth: 0.1
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0.65, z: 0}
 --- !u!1 &4338971602928627499
 GameObject:
   m_ObjectHideFlags: 0

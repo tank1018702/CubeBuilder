@@ -37,7 +37,7 @@ public class ThirdPesonCamera : MonoBehaviour
     {
         camTransform = transform;
 
-
+        
         CurrentRotation = lookAt.rotation;
 
 
@@ -45,7 +45,6 @@ public class ThirdPesonCamera : MonoBehaviour
 
     private void Update()
     {
-
 
         if (Input.GetMouseButton(1))
         {
@@ -77,7 +76,7 @@ public class ThirdPesonCamera : MonoBehaviour
         Debug.DrawRay(charaPos, rotation * new Vector3(0, 0, -10f));
         if (Physics.Raycast(charaPos, rotation * new Vector3(0, 0, -10f), out hit, 100f, CameraCheck))
         {
-            Debug.Log(hit.transform.name);
+            //Debug.Log(hit.transform.name);
             float d = (hit.point - lookAt.transform.position).magnitude;
 
             if (d < distance)

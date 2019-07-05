@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ public class CubeChunk : MonoBehaviour
     }
 
 
-    public CubeMesh mesh;
+    public CubeMesh terrain, plan;
     [SerializeField]
     CubeChunk[] NeighborChunks;
 
@@ -48,7 +49,7 @@ public class CubeChunk : MonoBehaviour
     private void Awake()
     {
         cubes = new byte[CubeMetrics.CHUNK_WIDTH * CubeMetrics.CHUNK_WIDTH * CubeMetrics.CHUNK_WIDTH];
-        mesh = GetComponent<CubeMesh>();
+
         NeighborChunks = new CubeChunk[6];
         tempVerticesArray = new Vector3[8];
         enabled = false;
@@ -69,15 +70,7 @@ public class CubeChunk : MonoBehaviour
         enabled = false;
     }
 
-    [ContextMenu("log_Data")]
-    void DataTest()
-    {
-        for(int i=0;i<cubes.Length;i++)
-        {
-            Debug.Log(i + ": " + CubeData.ToCubeData(cubes[i]).HasCube);
-        }
-        Debug.Log(grid.chunkDatas.ContainsKey(ChunkCoordinate.ToString()));
-    }
+
 
    
 
@@ -95,7 +88,6 @@ public class CubeChunk : MonoBehaviour
         {
             Refresh();
         }
-
     }
 
     public void SetCubeData(Vector3 cubePosition,byte data,bool refresh=false)
@@ -127,7 +119,6 @@ public class CubeChunk : MonoBehaviour
     public void SetCubeData(int x, int y, int z, byte data,bool refresh=false)
     {
         SetCubeData(CubeMetrics.GetCubeIndexToChunk(x, y, z), data,refresh);
-
     }
 
     //-----------------------------------------------------------------------------------
@@ -136,7 +127,6 @@ public class CubeChunk : MonoBehaviour
     {
         return cubes;
     }
-
 
     byte GetCubeData(int index)
     {
@@ -162,9 +152,6 @@ public class CubeChunk : MonoBehaviour
     {
         return cubes[CubeMetrics.GetCubeIndexToChunk(x, y, z)];
     }
-
-
-
     #endregion
 
 
@@ -208,7 +195,13 @@ public class CubeChunk : MonoBehaviour
   
         for (int i = 0; i < 6; i++)
         {
-            if (!CheckAdjacent(x, y, z, (CubeSurface)i))
+            int temp = i;
+            if (temp < 4)
+            {
+                temp = (temp + (int)data.orientate) > 3 ? temp + (int)data.orientate - 4 : temp + (int)data.orientate;
+            }
+
+            if (!CheckAdjacent(x, y, z, (CubeSurface)temp,data.isTransparent))
             {
                 TriangualteCubeSurface(cubeVertices, (CubeSurface)i, data);
             }
@@ -217,96 +210,160 @@ public class CubeChunk : MonoBehaviour
 
     void TriangualteCubeSurface(Vector3[] vertices, CubeSurface surfaceTo, CubeData data)
     {
-
         float uCoordinate = ((int)surfaceTo * 1.0f) / 6.0f;
         float vCoordinate = ((int)data.type * 1.0f) / 16f * 1.0f;
         Vector2 uvBasePoint = new Vector2(uCoordinate, vCoordinate);
+
+        CubeMesh mesh = data.isTransparent ? plan : terrain;
+
+     
 
         switch (surfaceTo)
         {
             case CubeSurface.up:
                 mesh.AddQuad(vertices[0], vertices[1], vertices[2], vertices[3]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
             case CubeSurface.down:
                 mesh.AddQuad(vertices[5], vertices[4], vertices[7], vertices[6]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
             case CubeSurface.left:
                 mesh.AddQuad(vertices[0], vertices[3], vertices[7], vertices[4]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
             case CubeSurface.right:
                 mesh.AddQuad(vertices[2], vertices[1], vertices[5], vertices[6]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
             case CubeSurface.front:
                 mesh.AddQuad(vertices[1], vertices[0], vertices[4], vertices[5]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
             case CubeSurface.back:
                 mesh.AddQuad(vertices[3], vertices[2], vertices[6], vertices[7]);
-                mesh.AddQuadUV(uvBasePoint, 16);
                 break;
         }
+        mesh.AddQuadUV(uvBasePoint, 16);
     }
+    
+    //
+    //bool CheckAdjacent2(int x, int y, int z, CubeSurface surfaceTo)
+    //{
+    //    int minValue = 0;
+    //    int maxValue = CubeMetrics.CHUNK_WIDTH - 1;
+    //    CubeCoordinate c;
+    //    switch (surfaceTo)
+    //    {
+    //        case CubeSurface.front:
+    //            if (z + 2 > CubeMetrics.CHUNK_WIDTH)
+    //            {
+    //                c = ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.front);
+    //                //return grid.chunkDatas.ContainsKey(c.ToString()) &&
+    //                //    CubeData.ToCubeData(grid.chunkDatas[c.ToString()][CubeMetrics.GetCubeIndexToChunk(x, y, minValue)]).HasCube;
+    //                //Debug.Log(grid.chunkDatas.ContainsKey(c.ToString()));
+    //                return NeighborChunks[(int)AdjacentDirection.front] &&
+    //               CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.front].
+    //               cubes[CubeMetrics.GetCubeIndexToChunk(x, y, minValue)]).HasCube;
+    //            }
+                
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y, z + 1)]).HasCube;
+    //        case CubeSurface.back:
+    //            if (z - 1 < 0)
+    //            {
+    //                return NeighborChunks[(int)AdjacentDirection.back] &&
+    //                 CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.back].
+    //                 cubes[CubeMetrics.GetCubeIndexToChunk(x, y, maxValue)]).HasCube;
+    //            }
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y, z - 1)]).HasCube;
+    //        case CubeSurface.left:
+    //            if (x - 1 < 0)
+    //            {
+    //                return NeighborChunks[(int)AdjacentDirection.left] &&
+    //                CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.left].cubes[CubeMetrics.GetCubeIndexToChunk(maxValue, y, z)]).HasCube;
+    //            }
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x - 1, y, z)]).HasCube;
+    //        case CubeSurface.right:
+    //            if (x + 2 > CubeMetrics.CHUNK_WIDTH)
+    //            {
+    //                return NeighborChunks[(int)AdjacentDirection.right] &&
+    //                CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.right].cubes[CubeMetrics.GetCubeIndexToChunk(minValue, y, z)]).HasCube;
+    //            }
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x + 1, y, z)]).HasCube;
+    //        case CubeSurface.up:
+    //            if (y + 2 > CubeMetrics.CHUNK_WIDTH)
+    //            {
+    //                return NeighborChunks[(int)AdjacentDirection.up] &&
+    //                CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.up].cubes[CubeMetrics.GetCubeIndexToChunk(x, minValue, z)]).HasCube;
+    //            }
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y + 1, z)]).HasCube;
+    //        case CubeSurface.down:
+    //            if (y - 1 < 0)
+    //            {
+    //                return NeighborChunks[(int)AdjacentDirection.down] &&
+    //                CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.down].cubes[CubeMetrics.GetCubeIndexToChunk(x, maxValue, z)]).HasCube;
+    //            }
+    //            return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y - 1, z)]).HasCube;
+    //        default:
+    //            return false;
+    //    }
+    //}
 
-    bool CheckAdjacent(int x, int y, int z, CubeSurface surfaceTo)
+    //考虑未实例化到场景中的chunk, 直接在数据表里核对是否需要隐藏
+    bool CheckAdjacent(int x, int y, int z, CubeSurface surfaceTo,bool isTransparent)
     {
-        int minValue = 0;
-        int maxValue = CubeMetrics.CHUNK_WIDTH - 1;
-        switch (surfaceTo)
+        int tempX = x;
+        int tempY = y;
+        int tempZ = z;
+        bool outOfRange = false;
+        CubeCoordinate coordinate;
+
+        switch(surfaceTo)
         {
             case CubeSurface.front:
-                if (z + 2 > CubeMetrics.CHUNK_WIDTH)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.front] &&
-                   CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.front].
-                   cubes[CubeMetrics.GetCubeIndexToChunk(x, y, minValue)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y, z + 1)]).HasCube;
+                outOfRange = z + 2 > CubeMetrics.CHUNK_WIDTH;
+                coordinate = ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.front);
+                tempZ = outOfRange ? 0 : z + 1;
+                break;
             case CubeSurface.back:
-                if (z - 1 < 0)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.back] &&
-                     CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.back].
-                     cubes[CubeMetrics.GetCubeIndexToChunk(x, y, maxValue)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y, z - 1)]).HasCube;
+                outOfRange = z - 1 < 0;
+                coordinate= ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.back);
+                tempZ = outOfRange ? CubeMetrics.CHUNK_WIDTH - 1 : z - 1;
+                break;
             case CubeSurface.left:
-                if (x - 1 < 0)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.left] &&
-                    CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.left].cubes[CubeMetrics.GetCubeIndexToChunk(maxValue, y, z)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x - 1, y, z)]).HasCube;
+                outOfRange = x - 1 < 0;
+                coordinate= ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.left);
+                tempX = outOfRange ? CubeMetrics.CHUNK_WIDTH - 1 : x - 1;
+                break;
             case CubeSurface.right:
-                if (x + 2 > CubeMetrics.CHUNK_WIDTH)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.right] &&
-                    CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.right].cubes[CubeMetrics.GetCubeIndexToChunk(minValue, y, z)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x + 1, y, z)]).HasCube;
+                outOfRange = x + 2 > CubeMetrics.CHUNK_WIDTH;
+                coordinate = ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.right);
+                tempX = outOfRange ? 0 : x + 1;
+                break;
             case CubeSurface.up:
-                if (y + 2 > CubeMetrics.CHUNK_WIDTH)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.up] &&
-                    CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.up].cubes[CubeMetrics.GetCubeIndexToChunk(x, minValue, z)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y + 1, z)]).HasCube;
+                outOfRange = y + 2 > CubeMetrics.CHUNK_WIDTH;
+                coordinate = ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.up);
+                tempY = outOfRange ? 0 : y + 1;
+                break;
             case CubeSurface.down:
-                if (y - 1 < 0)
-                {
-                    return NeighborChunks[(int)AdjacentDirection.down] &&
-                    CubeData.ToCubeData(NeighborChunks[(int)AdjacentDirection.down].cubes[CubeMetrics.GetCubeIndexToChunk(x, maxValue, z)]).HasCube;
-                }
-                return CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(x, y - 1, z)]).HasCube;
+                outOfRange = y - 1 < 0;
+                coordinate = ChunkCoordinate.GetAdjacentCoordinate(AdjacentDirection.down);
+                tempY= outOfRange ? CubeMetrics.CHUNK_WIDTH - 1 : y - 1;
+                break;
             default:
-                return false;
+                coordinate = ChunkCoordinate;
+                break;
+        }
+        try
+        {
+            return outOfRange ?
+            grid.chunkDatas.ContainsKey(coordinate.ToString()) &&
+            CubeData.ToCubeData(grid.chunkDatas[coordinate.ToString()][CubeMetrics.GetCubeIndexToChunk(tempX, tempY, tempZ)]).HasCube(isTransparent) :
+            CubeData.ToCubeData(cubes[CubeMetrics.GetCubeIndexToChunk(tempX, tempY, tempZ)]).HasCube(isTransparent);
+        }
+        catch
+        {
+            Debug.Log("chunk"+ChunkCoordinate.ToString()+":Surface"+surfaceTo+"index is error");
+            return false;
+
         }
     }
 
-  
 
     Vector3[] GetCubeVertices(Vector3 position, CubeOrientate orientate)
     {
@@ -319,13 +376,14 @@ public class CubeChunk : MonoBehaviour
 
     void Clear()
     {
-        mesh.Clear();
+        terrain.Clear();
+        plan.Clear();
     }
 
     void Apply()
     {
-        mesh.Apply();
-        
+        terrain.Apply();
+        plan.Apply();
     }
 
     #endregion
@@ -397,6 +455,12 @@ public class CubeChunk : MonoBehaviour
         enabled = true;  
     }
 
+    public void SetVisible(bool b)
+    {
+        terrain.transform.GetComponent<Renderer>().enabled = b;
+        plan.transform.GetComponent<Renderer>().enabled = b;
+    }
+
     private void LateUpdate()
     {   
         TriangulateByData();
@@ -404,28 +468,28 @@ public class CubeChunk : MonoBehaviour
         NeedRefresh = false;
     }
 
-    private void OnDrawGizmosSelected()
-    {
+    //private void OnDrawGizmosSelected()
+    //{
 
-        Gizmos.color = Color.blue;
-        if (cubes != null)
-        {
-            for (int y = 0; y < CubeMetrics.CHUNK_WIDTH; y++)
-            {
-                for (int z = 0; z < CubeMetrics.CHUNK_WIDTH; z++)
-                {
-                    for (int x = 0; x < CubeMetrics.CHUNK_WIDTH; x++)
-                    {
-                        if (cubes[x + y * CubeMetrics.CHUNK_WIDTH * CubeMetrics.CHUNK_WIDTH + z * CubeMetrics.CHUNK_WIDTH] != 0)
-                        {
-                            Vector3 pos = new Vector3(transform.position.x + x * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f,
-                                                    transform.position.y + y * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f,
-                                                    transform.position.z + z * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f);
-                            Gizmos.DrawWireCube(pos - new Vector3(16f, 16f, 16f), Vector3.one * CubeMetrics.CUBE_SIDE_LENGTH);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //    Gizmos.color = Color.blue;
+    //    if (cubes != null)
+    //    {
+    //        for (int y = 0; y < CubeMetrics.CHUNK_WIDTH; y++)
+    //        {
+    //            for (int z = 0; z < CubeMetrics.CHUNK_WIDTH; z++)
+    //            {
+    //                for (int x = 0; x < CubeMetrics.CHUNK_WIDTH; x++)
+    //                {
+    //                    if (cubes[x + y * CubeMetrics.CHUNK_WIDTH * CubeMetrics.CHUNK_WIDTH + z * CubeMetrics.CHUNK_WIDTH] != 0)
+    //                    {
+    //                        Vector3 pos = new Vector3(transform.position.x + x * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f,
+    //                                                transform.position.y + y * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f,
+    //                                                transform.position.z + z * CubeMetrics.CUBE_SIDE_LENGTH + CubeMetrics.CUBE_SIDE_LENGTH / 2f);
+    //                        Gizmos.DrawWireCube(pos - new Vector3(16f, 16f, 16f), Vector3.one * CubeMetrics.CUBE_SIDE_LENGTH);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
 }

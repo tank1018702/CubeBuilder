@@ -20,7 +20,7 @@ public class CubeController : MonoBehaviour
         {
 
             Debug.DrawLine(ray.origin, hitInfo.point,Color.red);
-            Debug.Log(hitInfo.transform.name);
+            //Debug.Log(hitInfo.transform.name);
 
             addCubePosition = CubeMetrics.WorldPosition2CubePosition(hitInfo.point - ray.direction * 0.001f);
             removeCubePosition = CubeMetrics.WorldPosition2CubePosition(hitInfo.point + ray.direction * 0.001f);

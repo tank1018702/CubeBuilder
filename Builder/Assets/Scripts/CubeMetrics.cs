@@ -261,6 +261,25 @@ public struct CubeCoordinate
         }
     }
 
+    public CubeCoordinate GetAdjacentCoordinate(params AdjacentDirection[] dirs)
+    {
+        CubeCoordinate temp = new CubeCoordinate(x, y, z);
+        for(int i=0;i<dirs.Length;i++)
+        {
+            temp = temp.GetAdjacentCoordinate(dirs[i]);
+        }
+        return temp;
+    }
+
+    public static int GetDistance(CubeCoordinate c1,CubeCoordinate c2)
+    {
+        int x = Mathf.Abs(c1.x - c2.x);
+        int y = Mathf.Abs(c1.y - c2.y);
+        int z = Mathf.Abs(c1.z - c2.z);
+
+        return x + y + z;
+    }
+
     //public static CubeCoordinate ToCoordinate(Vector3 position,CoordinateType type)
     //{
     //    int x = position.x > 0 ? 
@@ -348,6 +367,19 @@ public enum CubeSurface
 public enum CubeOrientate
 {
     front, right, back, left
+}
+
+public static class CubeOrientateExtensions
+{
+    public static CubeOrientate AddOrientate(this CubeOrientate orientate,CubeOrientate target)
+    {
+        return (CubeOrientate)(((int)orientate + (int)target) % 4);
+    }
+    public static CubeOrientate SubOrientate(this CubeOrientate orientate,CubeOrientate target)
+    {
+        int temp= ((int)orientate - (int)target) % 4;
+        return temp < 0 ? (CubeOrientate)(temp + 4) : (CubeOrientate)temp;
+    }
 }
 
 public enum KeyDirection

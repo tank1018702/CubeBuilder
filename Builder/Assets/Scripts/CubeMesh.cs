@@ -13,9 +13,12 @@ public class CubeMesh : MonoBehaviour
     [NonSerialized]
     List<Vector3> vertices;
     [NonSerialized]
-    List<int> triangles;
+    List<int> triangles1;
+    [NonSerialized]
+    List<int> triangles2;
     [NonSerialized]
     List<Vector2> uvs;
+
 
     public bool useCollider;
 
@@ -24,6 +27,7 @@ public class CubeMesh : MonoBehaviour
         filter = GetComponent<MeshFilter>();
         cubeMesh = new Mesh();
         cubeMesh = filter.mesh;
+        cubeMesh.subMeshCount = 2;
 
         if (useCollider)
         {
@@ -35,20 +39,29 @@ public class CubeMesh : MonoBehaviour
     {
         cubeMesh.Clear();
         vertices = ListPool<Vector3>.Get();
-        triangles = ListPool<int>.Get();
+        triangles1 = ListPool<int>.Get();
+        triangles2 = ListPool<int>.Get();
         uvs = ListPool<Vector2>.Get();
+      
+
     }
 
     public void Apply()
     {
+
+        cubeMesh.subMeshCount = 2;
         cubeMesh.SetVertices(vertices);
         ListPool<Vector3>.Add(vertices);
 
-        cubeMesh.SetTriangles(triangles, 0);
-        ListPool<int>.Add(triangles);
+        cubeMesh.SetTriangles(triangles1, 0);
+        ListPool<int>.Add(triangles1);
+
+        cubeMesh.SetTriangles(triangles2, 1);
+        ListPool<int>.Add(triangles2);
 
         cubeMesh.SetUVs(0, uvs);
         ListPool<Vector2>.Add(uvs);
+
 
         cubeMesh.RecalculateNormals();
         
@@ -60,19 +73,35 @@ public class CubeMesh : MonoBehaviour
         }
     }
 
-    public void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3)
+    public void AddTriangle(Vector3 v1, Vector3 v2, Vector3 v3,int subIndex=0)
     {
         int vertexIndex = vertices.Count;
         vertices.Add(v1); vertices.Add(v2); vertices.Add(v3);
-        triangles.Add(vertexIndex); triangles.Add(vertexIndex + 1); triangles.Add(vertexIndex + 2);
+        if(subIndex!=0)
+        {
+            triangles2.Add(vertexIndex); triangles2.Add(vertexIndex + 1); triangles2.Add(vertexIndex + 2);
+        }
+        else
+        {
+            triangles1.Add(vertexIndex); triangles1.Add(vertexIndex + 1); triangles1.Add(vertexIndex + 2);
+        }
+        
     }
 
-    public void AddQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4)
+    public void AddQuad(Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4,int subIndex=0)
     {
         int vertexIndex = vertices.Count;
         vertices.Add(v1); vertices.Add(v2); vertices.Add(v3); vertices.Add(v4);
-        triangles.Add(vertexIndex); triangles.Add(vertexIndex + 1); triangles.Add(vertexIndex + 2);
-        triangles.Add(vertexIndex); triangles.Add(vertexIndex + 2); triangles.Add(vertexIndex + 3);
+        if(subIndex!=0)
+        {
+            triangles2.Add(vertexIndex); triangles2.Add(vertexIndex + 1); triangles2.Add(vertexIndex + 2);
+            triangles2.Add(vertexIndex); triangles2.Add(vertexIndex + 2); triangles2.Add(vertexIndex + 3);
+        }
+        else
+        {
+            triangles1.Add(vertexIndex); triangles1.Add(vertexIndex + 1); triangles1.Add(vertexIndex + 2);
+            triangles1.Add(vertexIndex); triangles1.Add(vertexIndex + 2); triangles1.Add(vertexIndex + 3);
+        }
     }
 
     public void AddQuadUV(Vector2 uvBasePoint, int TypeCount)
@@ -90,11 +119,7 @@ public class CubeMesh : MonoBehaviour
     {
         uvs.Add(new Vector2(uMin, vMin));
         uvs.Add(new Vector2(uMax, vMin));
-        uvs.Add(new Vector2(uMin, vMax));
         uvs.Add(new Vector2(uMax, vMax));
+        uvs.Add(new Vector2(uMin, vMax));
     }
-
-
-
-
 }

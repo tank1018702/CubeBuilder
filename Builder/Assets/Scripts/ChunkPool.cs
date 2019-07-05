@@ -37,7 +37,8 @@ public class ChunkPool : MonoBehaviour
     public void Set(CubeChunk chunk)
     {
         chunk.Init();
-        chunk.GetComponent<Renderer>().enabled = false;
+        chunk.SetVisible(false);
+        //chunk.GetComponent<Renderer>().enabled = false;
         chunkPool.Add(chunk);
     }
 

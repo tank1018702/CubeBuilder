@@ -11,19 +11,62 @@ public class Characher : MonoBehaviour
 
     public float jumpSpeed;
 
+    float movementY;
+
     public float rotateSpeed;
 
+    //CharacherCubeControlType ControlType
+    //{
+    //    get
+    //    {
+    //        return controlType;
+    //    }
+    //    set
+    //    {
+    //        if(controlType!=value)
+    //        {
+    //            controlType = value;
+                
+    //        }
+    //    }
+    //}
     CharacherCubeControlType controlType;
 
     CubeType cubeType;
 
+    PreviewMode previewMode;
+
+    CubeOrientate Orientate
+    {
+        get
+        {
+            return orientate;
+        }
+        set
+        {
+            if(orientate!=value)
+            {
+                orientate = value;
+                //Debug.Log("orientate change");
+                RefreshViewBox();
+            }
+        }
+    }
+    CubeOrientate orientate;
+
+   
+
     float moveAmount;
 
 
-    Rigidbody rigid;
+    //Rigidbody rigid;
+
+    CharacterController cc;
     Animator animator;
  
     public Transform previewCube;
+
+    public PreviewBox previewCube2;
 
     public Transform camTransform;
 
@@ -39,14 +82,15 @@ public class Characher : MonoBehaviour
     float turnAmount, forwardAmount;
 
 
-  public  ParticleSystem destroy, build;
+   public  ParticleSystem destroy, build;
 
 
 
 
     private void Awake()
     {
-        rigid = GetComponent<Rigidbody>();
+        //rigid = GetComponent<Rigidbody>();
+        cc = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         previewCube.localScale = Vector3.one * (CubeMetrics.CUBE_SIDE_LENGTH + 0.01f);
         controlType = CharacherCubeControlType.reomve;
@@ -57,6 +101,8 @@ public class Characher : MonoBehaviour
     void Start()
     {
        c= CubeController.Instence;
+
+
     }
 
 
@@ -77,15 +123,28 @@ public class Characher : MonoBehaviour
         turnAmount = Mathf.Atan2(move.x, move.z);
         forwardAmount = move.z;
 
+        GravityUpdate();
         MovementUpdate();
-        
+
+    }
+
+    void GravityUpdate()
+    {
+        if(!CheckGround())
+        {
+            movementY -= gravity * Time.fixedDeltaTime;
+        }
+    
+       
     }
 
     void MovementUpdate()
     {
         transform.Rotate(0, turnAmount * rotateSpeed * Time.deltaTime, 0);
         Vector3 velocity = Vector3.ProjectOnPlane(transform.forward * forwardAmount * moveSpeed, Vector3.up);
-        rigid.MovePosition(rigid.position+ new Vector3(velocity.x, 0, velocity.z) * Time.deltaTime);
+        //rigid.MovePosition(rigid.position+ new Vector3(velocity.x, 0, velocity.z) * Time.deltaTime);
+
+        cc.Move(new Vector3(velocity.x, movementY, velocity.z) * Time.deltaTime);
 
     }
 
@@ -93,24 +152,39 @@ public class Characher : MonoBehaviour
     {
         if(Input.GetMouseButtonDown(0)&&!EventSystem.current.IsPointerOverGameObject()&&CheckGround())
         {
+            Debug.Log(va);
             animator.SetTrigger("Build");
             ParticleSystem p = Instantiate(destroy);
-            
+        
             if(controlType==CharacherCubeControlType.add)
             {
-                CubeData data = new CubeData(true, false, CubeOrientate.front, cubeType);
-                grid.SetCubeData(va, data.ToByte());
-                p.transform.position = va;
-                
+                p.transform.position = va;                
             }
             else
             {
-                grid.SetCubeData(vr, byte.MinValue);
-                p.transform.position = vr;
-                
+                p.transform.position = vr;            
             }
+            CubeData data = new CubeData(true, false, Orientate, cubeType);
+            previewCube2.PreviewAction(data);
             p.Play();
         }
+    }
+
+    void CubeOrientateUpdate()
+    {
+        int orientTemp = (int)Orientate;
+
+        if(Input.GetKeyDown(KeyCode.Q))
+        {
+            //Debug.Log("q");
+            Orientate = orientTemp - 1 < 0 ? (CubeOrientate)(orientTemp + 3) : (CubeOrientate)(orientTemp - 1);
+        }
+        else if(Input.GetKeyDown(KeyCode.E))
+        {
+            //Debug.Log("e");
+            Orientate = orientTemp + 1 > 3 ? (CubeOrientate)(orientTemp - 3) : (CubeOrientate)(orientTemp + 1);
+        }
+
     }
 
     void CubePoslUpdate()
@@ -126,17 +200,16 @@ public class Characher : MonoBehaviour
            va=vr = transform.position + transform.forward * CubeMetrics.CUBE_SIDE_LENGTH+transform.up;
         }
 
-        
-
-        if (controlType == CharacherCubeControlType.add)
+        if (controlType == CharacherCubeControlType.reomve)
         {
-            previewCube.position = CubeMetrics.WorldPosition2CubePosition(va);
+            //previewCube.position = CubeMetrics.WorldPosition2CubePosition(va);
+            previewCube2.transform.position = CubeMetrics.WorldPosition2CubePosition(vr);
         }
         else
         {
-            previewCube.position = CubeMetrics.WorldPosition2CubePosition(vr);
+            //previewCube.position = CubeMetrics.WorldPosition2CubePosition(vr);
+            previewCube2.transform.position = CubeMetrics.WorldPosition2CubePosition(va);
         }
-
     }
 
     void AnimationUpdate()
@@ -148,7 +221,9 @@ public class Characher : MonoBehaviour
 
     void Jump()
     {
-        rigid.velocity += new Vector3(0, jumpSpeed, 0);
+        //rigid.velocity += new Vector3(0, jumpSpeed, 0);
+        //cc.Move(new Vector3(0, jumpSpeed, 0));
+        movementY = jumpSpeed;
         animator.SetTrigger("Jump");
     }
 
@@ -165,6 +240,7 @@ public class Characher : MonoBehaviour
 
     void Update()
     {
+        CubeOrientateUpdate();
         CubePoslUpdate();
         CubeControlUpdate();
         AnimationUpdate(); 
@@ -181,40 +257,65 @@ public class Characher : MonoBehaviour
             case 0:
                 controlType = CharacherCubeControlType.reomve;
                 cubeType = CubeType.debug;
+                previewMode = PreviewMode.cube;
                 break;
             case 1:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.debug;
+                previewMode = PreviewMode.cube;
                 break;
             case 2:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.brickWall;
+                previewMode = PreviewMode.cube;
                 break;
             case 3:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.stoneWall_old;
+                previewMode = PreviewMode.cube;
                 break;
             case 4:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.stoneWall;
+                previewMode = PreviewMode.cube;
                 break;
             case 5:
                 controlType = CharacherCubeControlType.add;
                 cubeType= CubeType.WoodenBox;
+                previewMode = PreviewMode.cube;
                 break;
             case 6:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.wood;
+                previewMode = PreviewMode.cube;
                 break;
             case 7:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.leaves;
+                previewMode = PreviewMode.cube;
                 break;
             case 8:
                 controlType = CharacherCubeControlType.add;
                 cubeType = CubeType.TNT;
+                previewMode = PreviewMode.cube;
                 break;
-        }         
+            case 9:
+                controlType = CharacherCubeControlType.add;
+                previewMode = PreviewMode.planBox;
+                break;
+            case 10:
+                previewMode = PreviewMode.planBox;
+                controlType = CharacherCubeControlType.copy;
+                break;
+        }
+        RefreshViewBox();
+    }
+
+    void RefreshViewBox()
+    {
+        CubeData data = new CubeData(true, true, orientate, cubeType);
+        //previewCube2.TriangulatePreviewCube(data);  
+        previewCube2.TriangualtePreview(previewMode,orientate,data,controlType);
     }
 
     private void OnDrawGizmos()
@@ -225,5 +326,5 @@ public class Characher : MonoBehaviour
 
 public enum CharacherCubeControlType
 {
-    add,reomve
+    add,reomve,copy
 }

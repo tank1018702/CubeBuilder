@@ -60,11 +60,7 @@ public class CubeGrid : MonoBehaviour
             manager.AddChunk(c.Value);
         }
 
-
-
     }
-
-
 
     private void Update()
     {
@@ -72,33 +68,25 @@ public class CubeGrid : MonoBehaviour
         //Debug.Log("chunkDatas" + chunkDatas.Count);
     }
 
-
-
-
-
-
-
-    void AddCell(Vector3 position,int data)
-    {
-       
-        
-       
-    }
-
-
-
-
-   
-
     public void SetCubeData(Vector3 position, byte data)
     {
-        Vector3 cubePosition = CubeMetrics.WorldPosition2CubePosition(position);
         CubeCoordinate chunkCoordinate = new CubeCoordinate(position, CubeCoordinate.CoordinateType.chunk);
-        CubeCoordinate cubeCoordinate = new CubeCoordinate(position, CubeCoordinate.CoordinateType.cubeWorld);
-        CubeChunk chunk = chunks[chunkCoordinate.ToString()];
-
-        chunk.SetCubeData(cubePosition, data,true);
+        if(chunks.TryGetValue(chunkCoordinate.ToString(),out CubeChunk chunk))
+        {
+            chunk.SetCubeData(position, data, true);
+        } 
     }
+
+    public byte GetCubeData(Vector3 position)
+    {     
+        CubeCoordinate chunkCoordinate = new CubeCoordinate(position, CubeCoordinate.CoordinateType.chunk);
+        if (chunks.TryGetValue(chunkCoordinate.ToString(), out CubeChunk chunk))
+        {
+            return chunk.GetCubeData(position);
+        }
+        return byte.MinValue;
+    }
+    
 
 
     public CubeChunk GetAdjacentChunk(CubeChunk chunk,AdjacentDirection direction)
